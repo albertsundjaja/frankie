@@ -1,4 +1,4 @@
-# Frankie Financial Case Study
+# Case Study
 
 ## Installation
 
