@@ -1,0 +1,8 @@
+version: '3.7'
+
+services:
+  go-frankie:
+    container_name: go-frankie
+    build: .
+    ports:
+      - "8888:8888"
