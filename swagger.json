@@ -1,0 +1,151 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "------  \nThis API allows developers to test the Universal SDK output to ensure it looks right..\n------\nThe traditional Swagger view of this documentation can be found here:\n  - https://app.swaggerhub.com/apis-docs/FrankieFinancial/TestUniversalSDK/\n  \n",
+    "version" : "1.0.3",
+    "title" : "Frankie Financial Universal SDK Tester API (Internal Only)",
+    "contact" : {
+      "email" : "dev@frankiefinancial.com"
+    }
+  },
+  "host" : "localhost",
+  "tags" : [ {
+    "name" : "Test",
+    "description" : "Test Services"
+  } ],
+  "schemes" : [ "https" ],
+  "consumes" : [ "application/json" ],
+  "produces" : [ "application/json" ],
+  "paths" : {
+    "/isgood" : {
+      "post" : {
+        "tags" : [ "Test" ],
+        "summary" : "Check that the output of the universal SDK is fine",
+        "description" : "Simple check to see if the service is running smoothly.\n\nThe body that you post here should be the direct output of the SDK's GetSessionData call.\n",
+        "operationId" : "USDKCheck",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "deviceCheckDetails",
+          "description" : "This is what the JSON that is exported from the SDK should look like. It's an array of objects that contain the details from each different provider wrapped up in the Universal SDK.\n",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/DeviceCheckDetailsObjectCollection"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The data is fine. No issues, and everyone gets a puppy.",
+            "schema" : {
+              "$ref" : "#/definitions/PuppyObject"
+            }
+          },
+          "500" : {
+            "description" : "The system is presently unavailable, or running in a severely degraded state. Check the error message for details",
+            "schema" : {
+              "$ref" : "#/definitions/ErrorObject"
+            }
+          }
+        },
+        "security" : [ ]
+      }
+    }
+  },
+  "definitions" : {
+    "enumKVPType" : {
+      "type" : "string",
+      "description" : "Used to describe the contents of the KVP data. \n\nThe general.* and raw.* types are pretty much what they say on the tin. \n\nAll raw.* fields will be base64 encoded so as to not interfere with JSON structuring. These are useful for returning/storing large quantities of data that doesn't necessarily require processing now, or may be useful to a calling client.\n\nThe id.* and pii.* are used to indicate that this is data that can be used to create new document objects, or entities. They should also be treated with the utmost care and attention when it comes to securing them too.\n\nid.external can be used to capture an object's ID on an external service, and can potentially be searchable in the index \nNote: This is different from a result.id.\n\nresult.* are used to capture response codes and transaction IDs from external services\n\nerror.* types can be used when processing a document that returns an error, but doesn't necessarily require a full blown error response. \n",
+      "enum" : [ "general.string", "general.integer", "general.float", "general.bool" ]
+    },
+    "KeyValuePairObject" : {
+      "type" : "object",
+      "properties" : {
+        "kvpKey" : {
+          "type" : "string",
+          "example" : "ip.address",
+          "description" : "Name of the data"
+        },
+        "kvpValue" : {
+          "type" : "string",
+          "example" : "1.23.45.123",
+          "description" : "Value of the data"
+        },
+        "kvpType" : {
+          "$ref" : "#/definitions/enumKVPType"
+        }
+      },
+      "description" : "Individual key-value pair"
+    },
+    "PuppyObject" : {
+      "type" : "object",
+      "required" : [ "puppy" ],
+      "properties" : {
+        "puppy" : {
+          "type" : "boolean",
+          "example" : true,
+          "default" : true
+        }
+      },
+      "description" : "Everyone gets a puppy if the SDK output is good."
+    },
+    "ErrorObject" : {
+      "type" : "object",
+      "properties" : {
+        "code" : {
+          "type" : "integer"
+        },
+        "message" : {
+          "type" : "string",
+          "example" : "Everything is wrong. Go fix it.",
+          "description" : "Description of what went wrong (if we can tell)"
+        }
+      }
+    },
+    "DeviceCheckDetailsObject" : {
+      "type" : "object",
+      "properties" : {
+        "checkType" : {
+          "type" : "string",
+          "description" : "Describes the type of check service we need to verify with. Choices are:\n\n  - DEVICE: Services that will be checking device characteristics\n  - BIOMETRIC: Services that will be checking biomentric characteristics\n  - COMBO: If you're using a service that combines both device and biometric information, use this.\n",
+          "enum" : [ "DEVICE", "BIOMETRIC", "COMBO" ]
+        },
+        "activityType" : {
+          "type" : "string",
+          "description" : "The type of activity we're checking. Choices are:\n\n - SIGNUP: Used when an entity is signing up to your service\n - LOGIN: Used when an already registered entity is logging in to your service\n - PAYMENT: Used when you wish to check that all is well for a payment\n - CONFIRMATION: User has confirmed an action and you wish to double check they're still legitimate\n \n You can also supply vendor specific activityTypes if you know them. To do this, make the first character an underscore _. \n So for example, to use BioCatch's LOGIN_3 type, you can send \"_LOGIN_3\" as a value. Note, if you do this, there is no error checking on the Frankie side, and thus if you supply an incorrect value, the call will fail.\n",
+          "enum" : [ "SIGNUP", "LOGIN", "PAYMENT", "CONFIRMATION", "_<Vendor Specific List>" ]
+        },
+        "checkSessionKey" : {
+          "type" : "string",
+          "description" : "The unique session based ID that will be checked against the service.\nService key must be unique or an error will be returned.\n"
+        },
+        "activityData" : {
+          "type" : "array",
+          "description" : "A collection of loosely typed Key-Value-Pairs, which contain arbitrary data to be passed on to the verification services. \nThe API will verify that:\n\n  * the list of \"Keys\" provided are unique to the call (no double-ups)\n  * that the Value provided matches the Type specified.\n  \nShould the verification fail, the error message returned will include information for each KVP pair that fails.\n",
+          "items" : {
+            "$ref" : "#/definitions/KeyValuePairObject"
+          }
+        }
+      },
+      "description" : "Contains any/all details we want to pass on to the device/biometric checking service as part of an activity / transaction. A transaction isn't just a payment, but can represent a number of different interaction types. See below for more.\n"
+    },
+    "DeviceCheckDetailsObjectCollection" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/definitions/DeviceCheckDetailsObject"
+      }
+    }
+  },
+  "responses" : {
+    "respSystem200OK" : {
+      "description" : "The data is fine. No issues, and everyone gets a puppy.",
+      "schema" : {
+        "$ref" : "#/definitions/PuppyObject"
+      }
+    },
+    "respSystem500NotGood" : {
+      "description" : "The system is presently unavailable, or running in a severely degraded state. Check the error message for details",
+      "schema" : {
+        "$ref" : "#/definitions/ErrorObject"
+      }
+    }
+  }
+}
