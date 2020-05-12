@@ -54,3 +54,45 @@ OR
 
 ginkgo -r -cover
 ```
+
+### Accessing the endpoint
+
+Use a REST API testing app such as Postman
+
+the server is running on port `8888`
+
+example request
+
+```
+POST http://localhost:8888/isgood
+Content-Type: application/json
+
+Body
+[
+  {
+    "checkType": "BIOMETRIC",
+    "activityType": "SIGNUP",
+    "checkSessionKey": "string1",
+    "activityData": [
+      {
+        "kvpKey": "ip.address",
+        "kvpValue": "1.23.45.123",
+        "kvpType": "general.string"
+      }
+    ]
+  },
+  {
+    "checkType": "BIOMETRIC",
+    "activityType": "SIGNUP",
+    "checkSessionKey": "string2",
+    "activityData": [
+      {
+        "kvpKey": "ip.address4",
+        "kvpValue": "1.1.1.1",
+        "kvpType": "general.string"
+      }
+    ]
+  }
+]
+
+```
