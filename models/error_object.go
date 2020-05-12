@@ -16,7 +16,7 @@ import (
 type ErrorObject struct {
 
 	// code
-	Code int64 `json:"code,omitempty"`
+	Code int `json:"code,omitempty"`
 
 	// Description of what went wrong (if we can tell)
 	Message string `json:"message,omitempty"`
